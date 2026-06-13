@@ -1,0 +1,25 @@
+{
+  "tools": [
+    {
+      "name": "search_invoices",
+      "description": "Search invoices by customer or status. Use when the user asks to find or filter invoices.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "query": { "type": "string" } },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "delete_invoice",
+      "description": "Deletes an invoice.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "id": { "type": "string" } }
+      }
+    },
+    {
+      "name": "do thing",
+      "description": "TODO"
+    }
+  ]
+}
