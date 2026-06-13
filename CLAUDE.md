@@ -41,4 +41,6 @@ src/cli.ts  the CLI surface     src/index.ts  the library API
 2. HTML report (`--report` is Markdown-only today).
 3. watch mode + multi-server view (Pro).
 4. Expose mcplint itself as an MCP server (dogfood).
+5. Provider abstraction — make the licence store a config switch (LemonSqueezy/
+   Gumroad) per the a11ygent pattern (ENHANCED-TODO in src/pro/license.ts).
 ```

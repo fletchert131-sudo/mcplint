@@ -1,7 +1,11 @@
 /** Pro licence check — the open-core gate. Mirrors the proven a11ygent pattern:
  *  the key comes from env or ~/.mcplint/config.json, successful validations are
  *  cached with a 14-day offline grace so paying users are never blocked by a
- *  flaky network, and MCPLINT_DEV=1 unlocks Pro locally for dev/demos. */
+ *  flaky network, and MCPLINT_DEV=1 unlocks Pro locally for dev/demos.
+ *
+ *  ENHANCED-TODO: the store provider is hardcoded to LemonSqueezy. The a11ygent
+ *  house pattern makes it a config switch (A11YGENT_LICENSE_PROVIDER); add a
+ *  MCPLINT_LICENSE_PROVIDER + Gumroad path before a second store goes live. */
 import { promises as fs } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -54,8 +58,11 @@ async function validateLemonSqueezy(key: string): Promise<boolean> {
     signal: AbortSignal.timeout(10_000),
   });
   const data = (await res.json()) as { valid?: boolean; license_key?: { status?: string } };
+  // `valid` is the provider's own validity flag; additionally reject explicitly
+  // revoked statuses as defense in depth. A missing status with valid:true is
+  // honoured — never lock a paying user out over an unexpected response shape.
   const status = data.license_key?.status;
-  return Boolean(data.valid) && (status === "active" || status === undefined);
+  return Boolean(data.valid) && status !== "inactive" && status !== "expired" && status !== "disabled";
 }
 
 function withinGrace(iso: string): boolean {

@@ -29,6 +29,10 @@ mcplint tools.json --report        # shareable Markdown report (Pro)
 - object input schemas; required params actually defined in properties
 - destructive tools (`delete`/`drop`/`exec`…) flag their risk in the description
 
+> Destructive detection is deliberately conservative: names like `reset_password`
+> or `execute_query` draw a `destructive-safety` **warning** (not an error) —
+> document the risk in the description to clear it.
+
 ## Free vs Pro
 
 - **Free** (no key, always works): lint, score, `--json`, and the `--ci` gate.
