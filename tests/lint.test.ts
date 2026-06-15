@@ -55,6 +55,20 @@ describe("lint — catches real problems", () => {
     const r = lint([{ name: "bad name!", description: "does something useful here", inputSchema: { type: "object" } }]);
     expect(r.findings.some((f) => f.ruleId === "name-format")).toBe(true);
   });
+  it("accepts a hyphenated (kebab-case) name — valid per the MCP spec", () => {
+    // Regression: the official @modelcontextprotocol/server-everything uses
+    // names like `get-sum`. Flagging these scored a spec-compliant server 0/100.
+    const r = lint([{ name: "get-sum", description: "Adds two numbers and returns the sum.", inputSchema: { type: "object" } }]);
+    expect(r.findings.some((f) => f.ruleId === "name-format")).toBe(false);
+  });
+  it("still flags a name with characters outside [A-Za-z0-9_-]", () => {
+    const r = lint([{ name: "get.sum", description: "Adds two numbers together for you.", inputSchema: { type: "object" } }]);
+    expect(r.findings.some((f) => f.ruleId === "name-format")).toBe(true);
+  });
+  it("flags a destructive hyphenated tool with no risk note", () => {
+    const r = lint([{ name: "delete-account", description: "Deletes the account.", inputSchema: { type: "object" } }]);
+    expect(r.findings.some((f) => f.ruleId === "destructive-safety")).toBe(true);
+  });
   it("flags a destructive tool with no risk note (underscored name)", () => {
     const r = lint([{ name: "delete_account", description: "Deletes the account.", inputSchema: { type: "object" } }]);
     expect(r.findings.some((f) => f.ruleId === "destructive-safety")).toBe(true);

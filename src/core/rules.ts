@@ -3,10 +3,15 @@
  * lacks: description usefulness, token weight, and safety on destructive tools. */
 import type { Finding, McpTool, Rule, Severity } from "./types.js";
 
-const MAX_NAME = 64;
+const MAX_NAME = 128; // MCP/Anthropic tool-name length cap
 const MIN_DESC = 12; // chars; below this a description can't guide tool choice
 const MAX_DESC = 1024; // chars; above this it bloats every request's context
-const NAME_RE = /^[a-zA-Z][a-zA-Z0-9_]*$/;
+/** The MCP / Anthropic tool-name charset: letters, digits, underscore, hyphen.
+ *  Hyphenated kebab-case (`get-sum`) is valid and widely used across the real
+ *  ecosystem (the official server-everything, GitHub's MCP server, …), so it
+ *  must NOT be an error — flagging it would score spec-compliant servers 0/100.
+ *  A leading digit is permitted by the charset; we don't reject it. */
+const NAME_RE = /^[a-zA-Z0-9_-]+$/;
 const PLACEHOLDER = /\b(todo|tbd|fixme|describe this|tool description|lorem ipsum|placeholder)\b/i;
 
 /** Verbs that imply a destructive/irreversible action (matched per name token,
@@ -35,7 +40,7 @@ export const rules: Rule[] = [
         .filter((t) => !NAME_RE.test(t.name) || t.name.length > MAX_NAME)
         .map((t) =>
           finding("name-format", "error", t.name,
-            `Name ${JSON.stringify(t.name)} must match [a-zA-Z][a-zA-Z0-9_]* and be ≤ ${MAX_NAME} chars.`)),
+            `Name ${JSON.stringify(t.name)} must match [A-Za-z0-9_-]+ and be ≤ ${MAX_NAME} chars.`)),
   },
   {
     id: "duplicate-names",

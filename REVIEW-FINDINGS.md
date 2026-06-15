@@ -17,15 +17,12 @@ only below.
 
 ## 2026-06-13
 
-- **MINOR** — `src/cli.ts:67-72` — `lint(parseTools(JSON.parse(raw)))` runs in
-  one try/catch where any non-`McpLintError` throw is reported as
-  `Invalid JSON in <file>`. That's correct for a JSON syntax error, but a bug
-  in a *rule* (`src/core/rules.ts`) processing a valid-but-adversarial
-  `inputSchema` would surface as "Invalid JSON", wrongly blaming the customer's
-  input for an internal defect and sending them down the wrong path. Fix:
-  separate the `JSON.parse` step (→ "Invalid JSON") from the `parseTools`/`lint`
-  step (→ "Could not lint <file>: <message>") so the two failure classes report
-  distinctly.
+- **MINOR — FIXED (15 Jun, live-server increment)** — `src/cli.ts` —
+  `lint(parseTools(JSON.parse(raw)))` used one try/catch that labelled every
+  non-`McpLintError` throw "Invalid JSON". Now `lintSource()` separates the
+  steps: `JSON.parse` → "Invalid JSON in <file>", `parseTools`/connect →
+  `McpLintError`/`McpConnectError` messages, and an unexpected throw →
+  "mcplint internal error: …" (never blames the customer's input for our bug).
 - **NOTE (accepted posture, not a finding)** — `MCPLINT_DEV=1` unlocks Pro
   locally and is documented in public open-core source, so anyone reading the
   repo can unlock Pro free. This mirrors the a11ygent house pattern Tom blessed;
