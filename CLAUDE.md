@@ -71,3 +71,7 @@ src/cli.ts   the CLI surface (file + --cmd live sources)   src/index.ts  the lib
 5. Provider abstraction — make the licence store a config switch (LemonSqueezy/
    Gumroad) per the a11ygent pattern (ENHANCED-TODO in src/pro/license.ts).
 ```
+
+<!-- Karpathy coding-behaviour guardrails (vendored copy — see ./KARPATHY.md). -->
+<!-- Four rules that stop agents over-building, going off-scope, or claiming "done" unverified. -->
+@KARPATHY.md
