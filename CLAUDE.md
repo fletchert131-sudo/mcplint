@@ -75,3 +75,8 @@ src/cli.ts   the CLI surface (file + --cmd live sources)   src/index.ts  the lib
 <!-- Karpathy coding-behaviour guardrails (vendored copy — see ./KARPATHY.md). -->
 <!-- Four rules that stop agents over-building, going off-scope, or claiming "done" unverified. -->
 @KARPATHY.md
+
+## Session memory
+This repo has a STATE.md "where we left off" file for cross-device continuity (laptop ·
+phone · nightly). ALWAYS `git pull` + read ./STATE.md at session start; update + commit +
+push ./STATE.md at session end. Durable facts → CLAUDE.md; volatile "now" → STATE.md.
