@@ -1,0 +1,56 @@
+{
+  "name": "@tomfletcher2929/mcplint",
+  "version": "0.1.1",
+  "description": "Lint and score Model Context Protocol (MCP) server tool definitions before you publish — name/schema validity, description quality, token weight, and safety annotations for destructive tools. CLI + library.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "lint",
+    "linter",
+    "ai-agent",
+    "tools",
+    "claude",
+    "quality",
+    "ci"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fletchert131-sudo/mcplint.git"
+  },
+  "homepage": "https://github.com/fletchert131-sudo/mcplint#readme",
+  "bugs": {
+    "url": "https://github.com/fletchert131-sudo/mcplint/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "bin": {
+    "mcplint": "./dist/cli.js",
+    "mcplint-mcp": "./dist/serve-main.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0"
+  }
+}

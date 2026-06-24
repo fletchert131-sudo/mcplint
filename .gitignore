@@ -1,0 +1,26 @@
+node_modules/
+dist/
+build/
+out/
+.next/
+*.tsbuildinfo
+*.log
+.mcplint/
+mcplint-report.*
+.DS_Store
+
+# Secrets — never commit (the only env var is MCPLINT_LICENSE_KEY, customer-set)
+.env
+.env.*
+*.local
+*.key
+*.pem
+
+# Internal ops/strategy docs — kept on disk, not part of the public OSS surface
+/STATE.md
+/SETUP.md
+/CHECKLIST.md
+/REVIEW-FINDINGS.md
+/GTM/
+/LAUNCH/
+/.claude/
