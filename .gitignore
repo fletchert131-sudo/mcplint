@@ -24,3 +24,6 @@ mcplint-report.*
 /GTM/
 /LAUNCH/
 /.claude/
+
+# Internal go-live runbook (pricing/GTM) — keep off the public surface
+/LEMONSQUEEZY-SETUP.md
