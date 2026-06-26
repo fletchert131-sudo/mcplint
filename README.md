@@ -87,6 +87,9 @@ on a single source, so run those one source at a time.
 - **Free** (no key, always works): lint, score, `--json`, and the `--ci` gate — for a single file or a single live `--cmd` server.
 - **Pro**: `--report` export (Markdown or `--format html`), watch mode, and the multi-source view (several sources in one pass). Set `MCPLINT_LICENSE_KEY`.
 
+<!-- TODO(launch): replace LEMONSQUEEZY_STORE_URL below with the real checkout URL — see LEMONSQUEEZY-SETUP.md -->
+**Get Pro:** [mcplint Pro](LEMONSQUEEZY_STORE_URL) — then `export MCPLINT_LICENSE_KEY=<your-key>`.
+
 ## Use as a library
 
 ```ts

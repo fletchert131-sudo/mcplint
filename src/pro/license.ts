@@ -91,6 +91,8 @@ export async function checkLicense(): Promise<LicenseStatus> {
   }
 }
 
+// TODO(launch): once the LemonSqueezy product exists, optionally add the direct
+// checkout URL line here. See LEMONSQUEEZY-SETUP.md. Pointing to the README is fine.
 export const UPGRADE_MESSAGE = [
   "This is an mcplint Pro feature.",
   "Pro unlocks: shareable report export, watch mode, and the multi-server view.",
