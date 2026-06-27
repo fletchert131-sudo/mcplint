@@ -1,38 +1,40 @@
-/** Pro licence check — the open-core gate. The key comes from env or
- *  ~/.mcplint/config.json, successful validations are cached with a 14-day
- *  offline grace so paying users are never blocked by a flaky network, and
- *  MCPLINT_DEV=1 unlocks Pro locally for dev/demos.
+/** Pro licence check — the open-core gate, verified OFFLINE.
  *
- *  ENHANCED-TODO: the store provider is hardcoded to LemonSqueezy. Make it a
- *  config switch (MCPLINT_LICENSE_PROVIDER) and add a Gumroad path before a
- *  second store goes live. */
+ *  A licence key is a signed token:
+ *      mcpl_<base64url(payload)>.<base64url(ed25519-signature)>
+ *  mcplint verifies the signature against an embedded public key with no network
+ *  call, so a paying user is never blocked by connectivity and no secret ever
+ *  ships inside the CLI. The matching PRIVATE signing key lives only on the
+ *  seller's machine (see scripts/issue-license.mjs) — it is never committed and
+ *  never shipped. MCPLINT_DEV=1 unlocks Pro locally for dev/demos.
+ *
+ *  The key may come from MCPLINT_LICENSE_KEY or ~/.mcplint/config.json. */
 import { promises as fs } from "node:fs";
+import { createPublicKey, verify as edVerify } from "node:crypto";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const GRACE_DAYS = 14;
 const DIR = join(homedir(), ".mcplint");
-const CACHE_FILE = join(DIR, "license.json");
 const CONFIG_FILE = join(DIR, "config.json");
+const KEY_PREFIX = "mcpl_";
 
-export type LicenseReason =
-  | "dev-mode"
-  | "validated-online"
-  | "offline-grace"
-  | "no-key"
-  | "invalid-key"
-  | "expired-grace"
-  | "provider-error";
+// Ed25519 public key (SPKI). The private half signs licences off-machine; this
+// half only verifies them. Safe to be public — that's the point.
+const PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAsZOsje1nclJh/us+Wwentzk3DmfhHgwWmbtLDfN/0C8=
+-----END PUBLIC KEY-----`;
+
+export type LicenseReason = "dev-mode" | "valid" | "no-key" | "invalid-key";
 
 export interface LicenseStatus {
   pro: boolean;
   reason: LicenseReason;
-  detail?: string;
+  detail?: string; // the licensed email, when valid
 }
 
-interface Cache {
-  key: string;
-  lastValidated: string; // ISO
+interface Payload {
+  email: string;
+  issued: string; // ISO date the licence was minted
 }
 
 async function readJson<T>(path: string): Promise<T | null> {
@@ -45,28 +47,33 @@ async function readJson<T>(path: string): Promise<T | null> {
 
 async function getConfiguredKey(): Promise<string | null> {
   const env = process.env.MCPLINT_LICENSE_KEY;
-  if (env) return env;
+  if (env) return env.trim();
   const config = await readJson<{ licenseKey?: string }>(CONFIG_FILE);
-  return config?.licenseKey ?? null;
+  return config?.licenseKey?.trim() ?? null;
 }
 
-async function validateLemonSqueezy(key: string): Promise<boolean> {
-  const res = await fetch("https://api.lemonsqueezy.com/v1/licenses/validate", {
-    method: "POST",
-    headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ license_key: key }),
-    signal: AbortSignal.timeout(10_000),
-  });
-  const data = (await res.json()) as { valid?: boolean; license_key?: { status?: string } };
-  // `valid` is the provider's own validity flag; additionally reject explicitly
-  // revoked statuses as defense in depth. A missing status with valid:true is
-  // honoured — never lock a paying user out over an unexpected response shape.
-  const status = data.license_key?.status;
-  return Boolean(data.valid) && status !== "inactive" && status !== "expired" && status !== "disabled";
-}
-
-function withinGrace(iso: string): boolean {
-  return Date.now() - new Date(iso).getTime() < GRACE_DAYS * 86_400_000;
+/** Verify a signed licence key offline. Returns the payload when the signature
+ *  is valid for the given public key (defaults to the embedded production key),
+ *  else null. Never throws on malformed input. */
+export function verifyKey(key: string, publicKeyPem: string = PUBLIC_KEY_PEM): Payload | null {
+  try {
+    if (!key.startsWith(KEY_PREFIX)) return null;
+    const body = key.slice(KEY_PREFIX.length);
+    const dot = body.indexOf(".");
+    if (dot <= 0 || dot >= body.length - 1) return null; // need a non-empty payload AND signature
+    const payloadSeg = body.slice(0, dot);
+    const sig = Buffer.from(body.slice(dot + 1), "base64url");
+    if (sig.length === 0) return null;
+    // Ed25519: the algorithm argument is null. We sign/verify the payload
+    // segment's exact bytes, so any tamper to the payload breaks the signature.
+    const pub = createPublicKey(publicKeyPem);
+    if (!edVerify(null, Buffer.from(payloadSeg), pub, sig)) return null;
+    const payload = JSON.parse(Buffer.from(payloadSeg, "base64url").toString("utf8")) as Payload;
+    if (!payload || typeof payload.email !== "string" || !payload.email) return null;
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 export async function checkLicense(): Promise<LicenseStatus> {
@@ -75,20 +82,9 @@ export async function checkLicense(): Promise<LicenseStatus> {
   const key = await getConfiguredKey();
   if (!key) return { pro: false, reason: "no-key" };
 
-  const cache = await readJson<Cache>(CACHE_FILE);
-  try {
-    if (await validateLemonSqueezy(key)) {
-      await fs.mkdir(DIR, { recursive: true });
-      await fs.writeFile(CACHE_FILE, JSON.stringify({ key, lastValidated: new Date().toISOString() }), "utf8");
-      return { pro: true, reason: "validated-online" };
-    }
-    return { pro: false, reason: "invalid-key" };
-  } catch (err) {
-    // Network problem — honour the offline grace window for known-good keys.
-    if (cache?.key === key && withinGrace(cache.lastValidated)) return { pro: true, reason: "offline-grace" };
-    if (cache?.key === key) return { pro: false, reason: "expired-grace", detail: `offline more than ${GRACE_DAYS} days` };
-    return { pro: false, reason: "provider-error", detail: err instanceof Error ? err.message : String(err) };
-  }
+  const payload = verifyKey(key);
+  if (payload) return { pro: true, reason: "valid", detail: payload.email };
+  return { pro: false, reason: "invalid-key" };
 }
 
 export const UPGRADE_MESSAGE = [
@@ -102,8 +98,6 @@ export async function requirePro(feature: string): Promise<void> {
   const status = await checkLicense();
   if (status.pro) return;
   const why =
-    status.reason === "no-key"
-      ? "No licence key found."
-      : `Licence check failed (${status.reason}${status.detail ? `: ${status.detail}` : ""}).`;
+    status.reason === "no-key" ? "No licence key found." : "Licence key is invalid.";
   throw new Error(`[mcplint] "${feature}" needs Pro. ${why}\n\n${UPGRADE_MESSAGE}`);
 }

@@ -70,7 +70,7 @@ src/watch/   watch mode (Pro): re-lint on change, bounded & debounced
   loop.ts     pure scheduler — debounce + no-overlap + idempotent teardown
   source.ts   I/O driver — fs.watch (files) / interval (live) → loop.trigger()
 src/pro/     licensed
-  license.ts  LemonSqueezy verify + 14-day offline grace + MCPLINT_DEV=1 bypass
+  license.ts  offline Ed25519 signed-licence verify (embedded public key) + MCPLINT_DEV=1 bypass
   report.ts   Markdown report export
 src/cli.ts   the CLI surface (file + --cmd live sources)   src/index.ts  the library API
 ```
@@ -106,6 +106,12 @@ src/cli.ts   the CLI surface (file + --cmd live sources)   src/index.ts  the lib
    is the only I/O — STDOUT is JSON-RPC only, logs go to stderr. No licence touched (free).
    The exposed tool passes mcplint's own rules: `mcplint --cmd node -- dist/serve-main.js`
    scores it 100/100. See `src/serve/server.ts`.
-6. Provider abstraction — make the licence store a config switch (LemonSqueezy/
-   Gumroad) via `MCPLINT_LICENSE_PROVIDER` (ENHANCED-TODO in src/pro/license.ts).
+6. ~~Provider abstraction (LemonSqueezy/Gumroad config switch)~~ SUPERSEDED —
+   sold via Stripe (Fetch Labs) instead. Licences are now **offline Ed25519
+   signed keys** (`mcpl_<payload>.<sig>`), verified against an embedded public
+   key with no network. The private signing key lives only in
+   `C:\Users\fletc\secrets\mcplint-signing-key.pem`; mint keys with
+   `scripts/issue-license.mjs` (seller-only, never shipped). Fulfilment is
+   manual today (Stripe sale → mint → email the key); a Stripe webhook to
+   auto-issue is the next enhancement when volume justifies it.
 ```

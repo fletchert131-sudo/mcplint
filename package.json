@@ -1,6 +1,6 @@
 {
   "name": "@tomfletcher2929/mcplint",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lint and score Model Context Protocol (MCP) server tool definitions before you publish — name/schema validity, description quality, token weight, and safety annotations for destructive tools. CLI + library.",
   "keywords": [
     "mcp",

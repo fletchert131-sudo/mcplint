@@ -85,7 +85,16 @@ on a single source, so run those one source at a time.
 ## Free vs Pro
 
 - **Free** (no key, always works): lint, score, `--json`, and the `--ci` gate — for a single file or a single live `--cmd` server.
-- **Pro**: `--report` export (Markdown or `--format html`), watch mode, and the multi-source view (several sources in one pass). Set `MCPLINT_LICENSE_KEY`.
+- **Pro** (one-off): `--report` export (Markdown or `--format html`), watch mode, and the multi-source view (several sources in one pass).
+
+[**→ Get mcplint Pro**](https://buy.stripe.com/14A28s5KucfH3yu3yR83C00) — you'll be emailed a licence key. Activate it with an environment variable:
+
+```bash
+export MCPLINT_LICENSE_KEY="mcpl_…"      # macOS / Linux
+setx MCPLINT_LICENSE_KEY "mcpl_…"         # Windows (takes effect in new shells)
+```
+
+The key is verified **offline** — no account, no sign-in, no phone-home. One licence works on all your machines.
 
 ## Use as a library
 
